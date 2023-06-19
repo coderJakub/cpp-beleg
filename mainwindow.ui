@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>856</width>
+    <height>547</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_4">
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="personTab">
+       <attribute name="title">
+        <string>Personenverwaltung</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QWidget" name="addWidgetPerson" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <item>
+            <widget class="QPushButton" name="backButtonPerson">
+             <property name="text">
+              <string>Zurück</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="warningPerson">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>16</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: red;</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QFormLayout" name="formLayoutPerson">
+             <item row="1" column="1">
+              <widget class="QLineEdit" name="firstnameLineEdit"/>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="firstNameLabel">
+               <property name="text">
+                <string>Vorname</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="nameLabel">
+               <property name="text">
+                <string>Name</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLineEdit" name="nameLineEdit"/>
+             </item>
+             <item row="3" column="1">
+              <widget class="QDialogButtonBox" name="personAddButtonBox">
+               <property name="standardButtons">
+                <set>QDialogButtonBox::Cancel|QDialogButtonBox::Save</set>
+               </property>
+               <property name="centerButtons">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="viewWidgetPerson" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <widget class="QPushButton" name="addButtonPerson">
+             <property name="text">
+              <string>+ Hinzufügen</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QTableWidget" name="tableWidgetPerson">
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
+             <property name="showGrid">
+              <bool>false</bool>
+             </property>
+             <column>
+              <property name="text">
+               <string>Name</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Vorname</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Ausgeliehen</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string/>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string/>
+              </property>
+             </column>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="mediumTab">
+       <attribute name="title">
+        <string>Medienverwaltung</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_7">
+        <item>
+         <widget class="QWidget" name="addWidgetMedium" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout_6">
+           <item>
+            <widget class="QPushButton" name="backButtonMedium">
+             <property name="text">
+              <string>Zurück</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="warningMedium">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>16</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: red;
+</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QFormLayout" name="formLayoutMedium">
+             <item row="0" column="0">
+              <widget class="QLabel" name="mediumLabelMedium">
+               <property name="text">
+                <string>Medium</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="mediumComboBoxMedium">
+               <item>
+                <property name="text">
+                 <string>Buch</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>CD</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>DVD</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLineEdit" name="titleLineEditMedium"/>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="authorLabelMedium">
+               <property name="text">
+                <string>Autor</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLineEdit" name="authorLineEditMedium"/>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="titelLabelMedium">
+               <property name="text">
+                <string>Titel</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QDialogButtonBox" name="mediumAddButtonBox">
+               <property name="standardButtons">
+                <set>QDialogButtonBox::Cancel|QDialogButtonBox::Save</set>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="viewWidgetMedium" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout_5">
+           <item>
+            <widget class="QPushButton" name="addButtonMedium">
+             <property name="text">
+              <string>Hinzufügen</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QTableWidget" name="tableWidgetMedium">
+             <property name="styleSheet">
+              <string notr="true"/>
+             </property>
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
+             <property name="showGrid">
+              <bool>false</bool>
+             </property>
+             <column>
+              <property name="text">
+               <string>Medium</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Titel</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Autor</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Ausleiher</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string/>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string/>
+              </property>
+             </column>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="borrowTab">
+       <attribute name="title">
+        <string>Ausleihe</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_8">
+        <item>
+         <widget class="QWidget" name="borrowWidgetBorrow" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout_11">
+           <item>
+            <widget class="QLabel" name="warningLabelBorrow">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QFormLayout" name="formLayoutBorrowM">
+             <item row="1" column="0">
+              <widget class="QLabel" name="firstnameLabelBorrow">
+               <property name="text">
+                <string>Vorname</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLineEdit" name="firstnameLineEditBorrow"/>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="nameLabelBorrow">
+               <property name="text">
+                <string>Name</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLineEdit" name="nameLineEditBorrow"/>
+             </item>
+             <item row="3" column="1">
+              <widget class="QDialogButtonBox" name="buttonBoxBorrow">
+               <property name="standardButtons">
+                <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0" colspan="2">
+              <widget class="QLabel" name="titelBorrowerLabelBorrow">
+               <property name="text">
+                <string>Ausleihender</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="searchWidgetBorrow" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout_10">
+           <item>
+            <layout class="QFormLayout" name="formLayoutBorrowB">
+             <item row="5" column="0">
+              <widget class="QLabel" name="mediumLabelBorrow">
+               <property name="text">
+                <string>Medium</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <widget class="QComboBox" name="mediumComboBoxBorrow">
+               <item>
+                <property name="text">
+                 <string>Buch</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>CD</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>DVD</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLabel" name="titelMediumLabelBorrow">
+               <property name="text">
+                <string>Mediumsuche</string>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="0">
+              <widget class="QLabel" name="titelLabelBorrow">
+               <property name="text">
+                <string>Titel</string>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="1">
+              <widget class="QLineEdit" name="titelLineEditBorrow"/>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QPushButton" name="searchButtonBorrow">
+             <property name="text">
+              <string>Suchen</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QTableWidget" name="tableWidgetBorrow">
+             <column>
+              <property name="text">
+               <string>Medium</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Titel</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Autor</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string/>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string/>
+              </property>
+             </column>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="returnTab">
+       <attribute name="title">
+        <string>Rückgabe</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_9">
+        <item>
+         <widget class="QLabel" name="warningLabelReturn">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QFormLayout" name="formLayoutReturn">
+          <item row="0" column="0">
+           <widget class="QLabel" name="firstnameLabelReturn">
+            <property name="text">
+             <string>Vorname</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="firstnameLineEditReturn"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="nameLabelReturn">
+            <property name="text">
+             <string>Name</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="nameLineEditReturn"/>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="searchButtonReturn">
+          <property name="text">
+           <string>Suchen</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTableWidget" name="tableWidgetReturn">
+          <column>
+           <property name="text">
+            <string>Medium</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Titel</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Autor</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string/>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string/>
+           </property>
+          </column>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
