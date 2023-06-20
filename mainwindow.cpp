@@ -11,6 +11,10 @@
 #include <QHeaderView>
 #include <QChar>
 #include <QTabWidget>
+#include <QFile>
+#include <QTextStream>
+#include <QIODevice>
+#include <QSaveFile>
 #include "medium.h"
 #include "CD.h"
 #include "DVD.h"
@@ -173,39 +177,36 @@ void MainWindow::InitializeUI(){
         SetAddMedium(false);
     });
 
-    QTableWidget *tableM = this->findChild<QTableWidget *>("tableWidgetMedium");
-    tableM->setSortingEnabled(true);
-    connect(tableM->horizontalHeader(), &QHeaderView::sectionClicked, [=](int idx){
-        tableM->sortByColumn(idx, Qt::AscendingOrder);
-    });
-
 //Ausleige
     QPushButton *searchMedium = this->findChild<QPushButton*>("searchButtonBorrow");
     QObject::connect(searchMedium, &QPushButton::clicked, [=](){
     QTableWidget *table = this->findChild<QTableWidget *>("tableWidgetBorrow");
     table->setRowCount(0);
     QLineEdit *title = this->findChild<QLineEdit*>("titelLineEditBorrow");
+    QComboBox *mediumType = this->findChild<QComboBox*>("mediumComboBoxBorrow");
     QString titleText = title->text();
-
-    for (int row = 0; row < mediumList.size(); row++) {
-        QString mediumTitle = mediumList[row]->getTitle();
-        //Suchfunktion funtioniert nicht!!!
-        if (mediumTitle.contains(titleText, Qt::CaseInsensitive)){
+    int row=0;
+    for (int i = 0; i < mediumList.size(); i++) {
+        QString mediumTitle = mediumList[i]->getTitle();
+        if (!mediumTitle.startsWith(titleText, Qt::CaseInsensitive)||
+            !(mediumList[i]->getType()==mediumType->currentText())||
+            !(mediumList[i]->getBorrower()==nullptr))
+            continue;
         table->insertRow(row);
 
-        QTableWidgetItem *typeI =new QTableWidgetItem(mediumList[row]->getType());
+        QTableWidgetItem *typeI =new QTableWidgetItem(mediumList[i]->getType());
         table->setItem(row, 0, typeI);
 
-        QTableWidgetItem *titleB = new QTableWidgetItem(mediumList[row]->getTitle());
+        QTableWidgetItem *titleB = new QTableWidgetItem(mediumList[i]->getTitle());
         table->setItem(row, 1, titleB);
 
-        QTableWidgetItem *author = new QTableWidgetItem(mediumList[row]->getAuthor());
+        QTableWidgetItem *author = new QTableWidgetItem(mediumList[i]->getAuthor());
         table->setItem(row, 2, author);
 
         QPushButton *borrowButton = new QPushButton("Ausleihen");
         table->setCellWidget(row, 3, borrowButton);
 
-        Medium* currM = mediumList[row];
+        Medium* currM = mediumList[i];
         QObject::connect(borrowButton, &QPushButton::clicked, [=](){
             QLineEdit * nameLineEdit = this->findChild<QLineEdit*>("nameLineEditBorrow");
             QLineEdit * firstnameLineEdit = this->findChild<QLineEdit*>("firstnameLineEditBorrow");
@@ -239,7 +240,7 @@ void MainWindow::InitializeUI(){
                 QObject::disconnect(borrowBox, &QDialogButtonBox::accepted, nullptr, nullptr);
             });
         });
-        }
+        row++;
     }
     });
 
@@ -257,24 +258,27 @@ void MainWindow::InitializeUI(){
         if(person!=NULL){
             QTableWidget *table = this->findChild<QTableWidget *>("tableWidgetReturn");
             table->setRowCount(0);
-            for(int row=0; row<mediumList.size(); row++){
-                if(mediumList[row]->getBorrower() == person){
+            int row =0;
+            for(int i=0; i<mediumList.size(); i++){
+                if(mediumList[i]->getBorrower() == person){
                     table->insertRow(row);
-                    QTableWidgetItem *typeI =new QTableWidgetItem(mediumList[row]->getType());
+                    QTableWidgetItem *typeI =new QTableWidgetItem(mediumList[i]->getType());
                     table->setItem(row, 0, typeI);
 
-                    QTableWidgetItem *titleB = new QTableWidgetItem(mediumList[row]->getTitle());
+                    QTableWidgetItem *titleB = new QTableWidgetItem(mediumList[i]->getTitle());
                     table->setItem(row, 1, titleB);
 
-                    QTableWidgetItem *author = new QTableWidgetItem(mediumList[row]->getAuthor());
+                    QTableWidgetItem *author = new QTableWidgetItem(mediumList[i]->getAuthor());
                     table->setItem(row, 2, author);
 
                     QPushButton *returnButton = new QPushButton("Rückgabe");
                     table->setCellWidget(row, 3, returnButton);
-                    Medium* currM = mediumList[row];
-                    QObject::connect(searchButtonReturn, &QPushButton::clicked, [=](){
+                    Medium* currM = mediumList[i];
+                    QObject::connect(returnButton, &QPushButton::clicked, [=](){
                         currM->setBorrower(NULL);
+                        LoadMedia();
                     });
+                    row++;
                 }
             }
         }
@@ -290,12 +294,93 @@ void MainWindow::InitializeUI(){
     SetAddMedium(false);
     SetAddBorrower(false);
     SetSearchMedium(true);
+    LoadPersonFromFile();
+    LoadMediaFromFile();
     LoadMedia();
     LoadPerson();
 }
 
+void MainWindow::LoadMediaFromFile(){
+    QFile file("Media.txt");
+    //QFile::remove("Media.txt");
+    if(!file.exists()){
+        QSaveFile *file=new QSaveFile("Media.txt");
+        file->open(QIODevice::WriteOnly | QIODevice::Text);
+        file->commit();
+        delete file;
+    }
+    if(file.open(QIODevice::ReadOnly | QIODevice::Text)){
+        QTextStream in(&file);
+        while(!in.atEnd())
+            mediumList.append(Medium::parse(in.readLine(),&personList));
+        file.close();
+    }
+    else{
+        cerr << "Fehler beim öffnen von Media.txt" <<endl;
+        exit(-1);
+    }
+}
+
+void MainWindow::LoadPersonFromFile(){
+    QFile file("Person.txt");
+    //QFile::remove("Person.txt");
+    if(!file.exists()){
+        QSaveFile *file=new QSaveFile("Person.txt");
+        file->open(QIODevice::WriteOnly | QIODevice::Text);
+        file->commit();
+        delete file;
+    }
+    if(file.open(QIODevice::ReadOnly | QIODevice::Text)){
+        QTextStream in(&file);
+        while(!in.atEnd())
+            personList.append(Person::parse(in.readLine()));
+        file.close();
+    }
+    else{
+        cerr << "Fehler beim öffnen von Media.txt" <<endl;
+                exit(-1);
+    }
+}
+
+void MainWindow::SaveMedia(){
+    QFile file("Media.txt");
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream out(&file);
+        for (Medium* medium : mediumList) {
+            out << medium->print();
+            if(medium->getBorrower()!=NULL){
+                out << "," << personList.indexOf(medium->getBorrower()) << "\n";
+            }
+            else{
+                out << ",\n";
+            }
+        }
+        file.close();
+    }
+    else {
+        cerr << "Fehler beim öffnen von Media.txt" << endl;
+        exit(-1);
+    }
+}
+
+void MainWindow::SavePerson(){
+    QFile file("Person.txt");
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream out(&file);
+        for (Person* person : personList)
+            out << person->print() << "\n";
+        file.close();
+    }
+    else {
+        cerr << "Fehler beim öffnen von Media.txt" << endl;
+                exit(-1);
+    }
+}
+
 MainWindow::~MainWindow()
 {
+    SavePerson();
+    SaveMedia();
     delete ui;
 }
 
@@ -399,6 +484,7 @@ void MainWindow::EditPerson(Person* currP){
 
 void MainWindow::LoadMedia(){
     QTableWidget *table = this->findChild<QTableWidget *>("tableWidgetMedium");
+    table->setSortingEnabled(false);
     table->setRowCount(0);
     for(int row=0; row<mediumList.size(); ++row){
         table->insertRow(row);
@@ -439,11 +525,13 @@ void MainWindow::LoadMedia(){
         table->setCellWidget(row, 5, editButton);
         QObject::connect(editButton, &QPushButton::clicked, [=](){EditMedium(currM);});
     }
+    table->setSortingEnabled(true);
 }
 
 void MainWindow::LoadPerson(){
     QTableWidget *table = this->findChild<QTableWidget *>("tableWidgetPerson");
     table->setRowCount(0);
+    table->setSortingEnabled(false);
     for(int row=0; row<personList.size(); ++row){
         table->insertRow(row);
 
@@ -459,11 +547,13 @@ void MainWindow::LoadPerson(){
         Person* currP = personList[row];
         QObject::connect(listButton, &QPushButton::clicked, [=](){
             QTabWidget *tabWidget = this->findChild<QTabWidget*>("tabWidget");
+            QPushButton *searchButton = this->findChild<QPushButton*>("searchButtonReturn");
             tabWidget->setCurrentIndex(3);
             QLineEdit* firstname = this->findChild<QLineEdit*>("firstnameLineEditReturn");
             QLineEdit* name = this->findChild<QLineEdit*>("nameLineEditReturn");
             firstname->setText(currP->getFirstname());
             name->setText(currP->getName());
+            searchButton->click();
         });
 
         QPushButton *deleteButton = new QPushButton("Löschen");
@@ -479,6 +569,7 @@ void MainWindow::LoadPerson(){
         table->setCellWidget(row, 4, editButton);
         QObject::connect(editButton, &QPushButton::clicked, [=](){EditPerson(currP);});
     }
+    table->setSortingEnabled(true);
 }
 
 void MainWindow::SetViewPerson(bool visible){

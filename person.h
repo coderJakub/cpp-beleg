@@ -15,8 +15,8 @@ public:
     void setFirstname(QString firstname){this->firstname=firstname;}
     QString getName(){return name;}
     QString getFirstname(){return firstname;}
-    //void parse(QString Line);
-    //QString print();
+    static Person* parse(QString Line);
+    QString print();
 };
 
 #endif // PERSON_H

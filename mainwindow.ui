@@ -106,6 +106,9 @@
              <property name="showGrid">
               <bool>false</bool>
              </property>
+             <property name="sortingEnabled">
+              <bool>true</bool>
+             </property>
              <column>
               <property name="text">
                <string>Name</string>
@@ -251,6 +254,12 @@
              <property name="showGrid">
               <bool>false</bool>
              </property>
+             <property name="sortingEnabled">
+              <bool>true</bool>
+             </property>
+             <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+              <bool>true</bool>
+             </attribute>
              <column>
               <property name="text">
                <string>Medium</string>

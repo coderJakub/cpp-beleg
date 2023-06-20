@@ -24,6 +24,7 @@ set(PROJECT_SOURCES
         DVD.h
         person.h
         person.cpp
+        Media.txt
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

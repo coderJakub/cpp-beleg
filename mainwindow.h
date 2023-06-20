@@ -26,7 +26,11 @@ private:
 
     void InitializeUI();
     void LoadMedia();
+    void SaveMedia();
+    void SavePerson();
+    void LoadMediaFromFile();
     void LoadPerson();
+    void LoadPersonFromFile();
     void EditMedium(Medium* currM);
     void EditPerson(Person* currP);
     void SetAddPerson(bool visible);

@@ -12,6 +12,7 @@ private:
 
 public:
     Medium(QString title, QString author);
+    Medium(QString title, QString author, int borrower, QList<Person*>* personList);
     ~Medium();
     QString getTitle(){return title;}
     QString getAuthor(){return author;}
@@ -21,7 +22,7 @@ public:
     void setBorrower(Person* borrower){this->borrower=borrower;}
     virtual QString getType()=0;
     virtual QString print()=0;
-    static Medium* parse(QString Line);
+    static Medium* parse(QString Line, QList<Person*>* personList);
 };
 
 
