@@ -32,14 +32,29 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    LoadPersonFromFile();
+    LoadMediaFromFile();
     InitializeUI();
-
 }
 
-void MainWindow::InitializeUI(){
-//------PersonenverwaltungTab initialisieren--------
-    //Funktionalität zum add-Button hinzufügen
+void MainWindow::InitializePersonTab(){
+
+//---------------------------------------------------------
+//---Sichtbarkeit auf das Tabellen-Widget initialisieren---
+//---------------------------------------------------------
+
+    SetViewPerson(true);
+    SetAddPerson(false);
+
+//------------------------------------------------------
+//---Funktionalität zum "addButtonPerson" hinzufügen---
+//------------------------------------------------------
+
+    //Pointer auf "addButtonPerson"-Button einrichten
     QPushButton *addPerson = this->findChild<QPushButton*>("addButtonPerson");
+
+    //Funktion hinzufügen, die beim click-Event des Buttons aufgerufen wird
+    //->Add-Widget soll sichbar werden und geleert werden
     QObject::connect(addPerson, &QPushButton::clicked, [=](){
 
         //Auf Formlayout-Items zugreifen
@@ -47,7 +62,7 @@ void MainWindow::InitializeUI(){
         QLineEdit *lastName = this->findChild<QLineEdit *>("nameLineEdit");
         QLabel *warning = this->findChild<QLabel*>("warningPerson");
 
-        //Formlayout auf leeren
+        //Formlayout leeren
         warning->setText("");
         lastName->setText("");
         firstName->setText("");
@@ -57,10 +72,17 @@ void MainWindow::InitializeUI(){
         SetAddPerson(true);
     });
 
-    //Initialisierung der Buttons im Formlayout (sichern einer neuen Personen/abbrechen)
+//---------------------------------------------------------
+//---Funktionalität zur "personAddButtonBox" hinzufügen---
+//---------------------------------------------------------
+
+    //Pointer auf "personAddButtonBox"-DialogButtonBox einrichten 
     QDialogButtonBox *addPersonButtons = this->findChild<QDialogButtonBox *>("personAddButtonBox");
 
-    //Funktionalität zum save-Button hinzufügen
+    //Funktion hinzufügen, die beim accepted-Event der DialogButtonBox aufgerufen wird
+    //->Person soll zur personList hinzugefügt werden wenn diese noch nicht existiert
+    //->Danach soll personList erneut in der Tabelle geladen werden
+    //->Add-Widget wird wieder ausgeblendet
     QObject::connect(addPersonButtons, &QDialogButtonBox::accepted, [=](){
 
         //Auf Formlayout-Items zugreifen
@@ -70,38 +92,56 @@ void MainWindow::InitializeUI(){
 
         //Überprüfung ob Felder auch mit Text befüllt sind
         if((firstName->text().trimmed()).isEmpty() || (lastName->text().trimmed()).isEmpty()){
-            warning->setText("Die Texte Name und Vorname müssen befüllt sein");
-            lastName->setText("");
-            firstName->setText("");
+            warning->setText("Die Texte Name und Vorname müssen befüllt sein!");
             return;
         }
-        //Überprüfung ob Person schon vorhanden -->sonst warning!!
+        
+        //Überprüfung ob Person schon existiert
+        //->searchPerson erzeugt Rückgabewert -1, wenn sich noch keine Person mit gleichem Vor- und Nachnamen im System befindet
+        if(searchPerson(firstName->text(), lastName->text())!=-1){
+            warning->setText(firstName->text()+" "+lastName->text()+" ist schon im System eingefügt wurden!");
+            return;
+        }
 
-        Person* temp = new Person(firstName->text(), lastName->text());
-        personList.append(temp);
+        //Person zur Liste hinzufügen
+        personList.append(new Person(firstName->text(), lastName->text()));
+
+        //Erneutes Laden der personList in die Tabelle
         LoadPerson();
 
-        //Person hinzufügen
-
         //Sichtbarkeit auf das View-Widget ändern
         SetViewPerson(true);
         SetAddPerson(false);
     });
 
-    //Funtionalität zum cancel-Button hinzufügen
+    //Funktion hinzufügen, die beim rejected-Event der DialogButtonBox aufgerufen wird
+    //->lediglich Sichtbarkeit auf View-Widget ändern
     QObject::connect(addPersonButtons, &QDialogButtonBox::rejected, [=](){
+
         //Sichtbarkeit auf das View-Widget ändern
         SetViewPerson(true);
         SetAddPerson(false);
     });
+}
 
-    //Sichtbarkeit auf das View-Widget intialsieren
-    SetViewPerson(true);
-    SetAddPerson(false);
+void MainWindow::InitializeMediaTab(){
 
-//------MediumverwaltungTab initialisieren--------
-    //Funktionalität zum add-Button hinzufügen
+//---------------------------------------------------------
+//---Sichtbarkeit auf das Tabellen-Widget initialisieren---
+//---------------------------------------------------------
+
+    SetViewMedium(true);
+    SetAddMedium(false);
+
+//------------------------------------------------------
+//---Funktionalität zum "addButtonPerson" hinzufügen---
+//------------------------------------------------------
+
+    //Pointer auf "addButtonMedium"-Button einrichten
     QPushButton *addMedium = this->findChild<QPushButton*>("addButtonMedium");
+
+    //Funktion hinzufügen, die beim click-Event des Buttons aufgerufen wird
+    //->Add-Widget soll sichbar werden und geleert werden
     QObject::connect(addMedium, &QPushButton::clicked, [=](){
 
         //Auf Formlayout-Items zugreifen
@@ -120,11 +160,18 @@ void MainWindow::InitializeUI(){
         SetViewMedium(false);
         SetAddMedium(true);
     });
+    
+//---------------------------------------------------------
+//---Funktionalität zur "mediumAddButtonBox" hinzufügen---
+//---------------------------------------------------------
 
-    //Initialisierung der Buttons im Formlayout (sichern eines neuen Mediums/abbrechen)
+    //Pointer auf "personAddButtonBox"-DialogButtonBox einrichten
     QDialogButtonBox *addMediumButtons = this->findChild<QDialogButtonBox *>("mediumAddButtonBox");
 
-    //Funktionalität zum save-Button hinzufügen
+    //Funktion hinzufügen, die beim accepted-Event der DialogButtonBox aufgerufen wird
+    //->Medium soll zur mediaList hinzugefügt werden
+    //->Danach soll mediaList erneut in der Tabelle geladen werden
+    //->Add-Widget wird wieder ausgeblendet
     QObject::connect(addMediumButtons, &QDialogButtonBox::accepted, [=](){
 
         //Auf Formlayout-Items zugreifen
@@ -138,7 +185,8 @@ void MainWindow::InitializeUI(){
             warning->setText("Titel muss befüllt sein");
             return;
         }
-        //Überprüfung ob Medium schon vorhanden ->sonst warning!!
+
+        //Erstellung des Objekts von geforderter Klasse
         Medium* temp=NULL;
         if(medium->currentText()=="Buch")temp = new Book(title->text(), author->text());
         else if(medium->currentText()=="CD")temp= new CD(title->text(), author->text());
@@ -147,147 +195,322 @@ void MainWindow::InitializeUI(){
             cerr << "Ungültige Eingabe " << endl;
             exit(-1);
         }
+
+        //Medium zur Liste hinzufügen
         mediumList.append(temp);
+
+        //Erneutes Laden der mediaList in die Tabelle
         LoadMedia();
-        //Person hinzufügen
 
         //Sichtbarkeit auf das View-Widget ändern
         SetViewMedium(true);
         SetAddMedium(false);
     });
 
-    //Funktionalität zum cancel-Button hinzufügen
+    //Funktion hinzufügen, die beim rejected-Event der DialogButtonBox aufgerufen wird hinzufügen
+    //->lediglich Sichtbarkeit auf View-Widget ändern
     QObject::connect(addMediumButtons, &QDialogButtonBox::rejected, [=](){
+
+        //Sichtbarkeit auf das View-Widget ändern
         SetViewMedium(true);
         SetAddMedium(false);
     });
+}
 
-//Ausleige
+void MainWindow::InitializeBorrowTab(){
+
+//---------------------------------------------------------
+//---Funktionalität zum "searchButtonBorrow" hinzufügen---
+//---------------------------------------------------------
+
+    //Pointer auf "searchButtonBorrow"-Button einrichten
     QPushButton *searchMedium = this->findChild<QPushButton*>("searchButtonBorrow");
+
+    //Funktion hinzufügen, die beim click-Event des Buttons aufgerufen wird
+    //->in der Tabelle sollen alle gesuchten Medien aufgelistet werden
+    //->wenn ein Medium noch nicht ausgeliehen ist soll ein Button zum Ausleihen hinzugefügt werden
     QObject::connect(searchMedium, &QPushButton::clicked, [=](){
-    QTableWidget *table = this->findChild<QTableWidget *>("tableWidgetBorrow");
-    table->setRowCount(0);
-    QLineEdit *title = this->findChild<QLineEdit*>("titelLineEditBorrow");
-    QLineEdit *author = this->findChild<QLineEdit*>("authorLineEditBorrow");
-    QComboBox *mediumType = this->findChild<QComboBox*>("mediumComboBoxBorrow");
-    QCheckBox *borrowed = this->findChild<QCheckBox*>("checkBoxBorrow");
-    QString titleText = title->text();
-    QString authorText = author->text();
-    int row=0;
-    bool showBorrowed = borrowed->checkState();
-    for (int i = 0; i < mediumList.size(); i++) {
-        QString mediumTitle = mediumList[i]->getTitle();
-        if (!mediumTitle.startsWith(titleText, Qt::CaseInsensitive)||
-            !mediumTitle.startsWith(authorText, Qt::CaseInsensitive)||
-            !(mediumList[i]->getType()==mediumType->currentText())||
-            !(mediumList[i]->getBorrower()==nullptr || showBorrowed))
-            continue;
-        table->insertRow(row);
 
-        QTableWidgetItem *typeI =new QTableWidgetItem(mediumList[i]->getType());
-        table->setItem(row, 0, typeI);
+        //Pointer auf Tabelle und FormLayout einrichten
+        QTableWidget *table = this->findChild<QTableWidget *>("tableWidgetBorrow");
+        QLineEdit *title = this->findChild<QLineEdit*>("titelLineEditBorrow");
+        QLineEdit *author = this->findChild<QLineEdit*>("authorLineEditBorrow");
+        QComboBox *type = this->findChild<QComboBox*>("mediumComboBoxBorrow");
+        QCheckBox *showBorrowed = this->findChild<QCheckBox*>("checkBoxBorrow");
 
-        QTableWidgetItem *titleB = new QTableWidgetItem(mediumList[i]->getTitle());
-        table->setItem(row, 1, titleB);
+        //Eingaben in Variablen speichern
+        QString titleText = title->text();
+        QString authorText = author->text();
 
-        QTableWidgetItem *author = new QTableWidgetItem(mediumList[i]->getAuthor());
-        table->setItem(row, 2, author);
+        //Tabelle leeren
+        table->setRowCount(0);
+        
+        //Variable zum zählen der hinzugefügten Zeilen
+        int row=0;
 
-        Medium* currM = mediumList[i];
-        if(!(mediumList[i]->getBorrower()==nullptr)){
-            QTableWidgetItem *borrowState =new QTableWidgetItem("Ausgeliehen");
-            QColor redColor(Qt::red);
-            borrowState->setForeground(redColor);
-            QFont font;
-            font.setBold(true);
-            borrowState->setFont(font);
-            borrowState->setForeground(redColor);
-            table->setItem(row, 3, borrowState);
-            continue;
-        }
+        //Schleife, die durch mediaList interiert
+        //->wenn ein Medium die Forderrungen erfüllt soll es in der Tabelle angezeigt werden
+        for (int i = 0; i < mediumList.size(); i++) {
 
-        QPushButton *borrowButton = new QPushButton("Ausleihen");
-        table->setCellWidget(row, 3, borrowButton);
-        QObject::connect(borrowButton, &QPushButton::clicked, [=](){
-            QLineEdit * nameLineEdit = this->findChild<QLineEdit*>("nameLineEditBorrow");
-            QLineEdit * firstnameLineEdit = this->findChild<QLineEdit*>("firstnameLineEditBorrow");
-            QLabel *warning = this->findChild<QLabel*>("warningLabelBorrow");
-            nameLineEdit->setText("");
-            firstnameLineEdit->setText("");
-            warning->setText("");
-            SetAddBorrower(true);
-            SetSearchMedium(false);
-            QDialogButtonBox *borrowBox = this->findChild<QDialogButtonBox *>("buttonBoxBorrow");
-            QObject::connect(borrowBox, &QDialogButtonBox::accepted, [=](){
-                Person* borrower = NULL;
-                for(int i = 0; i<personList.size(); i++){
-                    if(personList[i]->getName().compare(nameLineEdit->text())==0 && personList[i]->getFirstname().compare(firstnameLineEdit->text())==0)
-                        borrower=personList[i];
-                }
-                if(borrower!=NULL){
-                    currM->setBorrower(borrower);
-                    LoadMedia();
-                    QObject::disconnect(borrowBox, &QDialogButtonBox::accepted, nullptr, nullptr);
-                    SetAddBorrower(false);
-                    SetSearchMedium(true);
-                }
-                else{
-                    warning->setText("Person nicht gefunden");
-                }
-            });
-            QObject::connect(borrowBox, &QDialogButtonBox::rejected, [=](){
-                SetAddBorrower(false);
-                SetSearchMedium(true);
-                QObject::disconnect(borrowBox, &QDialogButtonBox::accepted, nullptr, nullptr);
-            });
-        });
-        row++;
-    }
-    });
+            //Überprüfung ob Medium Forderungen erfüllt, sonst wird zum nächstem Medium gesprungen
+            //Forderrungen:
+            //->Medium soll vom gefordertem Typ sein
+            //->Titel soll mit dem Input soll mit Input beginnen (bei "" wird diese ignoriert)
+            //->Autor soll mit dem Input soll mit Input beginnen (bei "" wird diese ignoriert)
+            //->Wenn CheckBox auf false eingestellt ist darf Medium nicht ausgeliehen sein
+            if (!mediumList[i]->getTitle().startsWith(titleText, Qt::CaseInsensitive)||
+                !mediumList[i]->getAuthor().startsWith(authorText, Qt::CaseInsensitive)||
+                !(mediumList[i]->getType()==type->currentText())||
+                !(mediumList[i]->getBorrower()==nullptr || showBorrowed->checkState()))
+                continue;
 
-//Rückgabe
-    QPushButton *searchButtonReturn = this->findChild<QPushButton*>("searchButtonReturn");
-    QObject::connect(searchButtonReturn, &QPushButton::clicked, [=](){
-        QLineEdit* firstnameB = this->findChild<QLineEdit*>("firstnameLineEditReturn");
-        QLineEdit* nameB = this->findChild<QLineEdit*>("nameLineEditReturn");
-        QLabel* warning = this->findChild<QLabel*>("warningLabelReturn");
-        Person* person = NULL;
-        for(int i = 0; i<personList.size(); i++){
-            if(personList[i]->getName().compare(nameB->text())==0 && personList[i]->getFirstname().compare(firstnameB->text())==0)
-                person=personList[i];
-        }
-        if(person!=NULL){
-            QTableWidget *table = this->findChild<QTableWidget *>("tableWidgetReturn");
-            table->setRowCount(0);
-            int row =0;
-            for(int i=0; i<mediumList.size(); i++){
-                if(mediumList[i]->getBorrower() == person){
-                    table->insertRow(row);
-                    QTableWidgetItem *typeI =new QTableWidgetItem(mediumList[i]->getType());
-                    table->setItem(row, 0, typeI);
+            //_____Dieser Code wird nur ausgeführt ist, wenn Medium Forderrungen erfüllt______
 
-                    QTableWidgetItem *titleB = new QTableWidgetItem(mediumList[i]->getTitle());
-                    table->setItem(row, 1, titleB);
+            //Einfügen einer neuen Zeile in die Tabelle
+            table->insertRow(row);
 
-                    QTableWidgetItem *author = new QTableWidgetItem(mediumList[i]->getAuthor());
-                    table->setItem(row, 2, author);
+            //In Spalte 1 soll der Typ des Mediums eingetragen werden
+            QTableWidgetItem *typeB =new QTableWidgetItem(mediumList[i]->getType());
+            table->setItem(row, 0, typeB);
 
-                    QPushButton *returnButton = new QPushButton("Rückgabe");
-                    table->setCellWidget(row, 3, returnButton);
-                    Medium* currM = mediumList[i];
-                    QObject::connect(returnButton, &QPushButton::clicked, [=](){
-                        currM->setBorrower(NULL);
-                        LoadMedia();
-                    });
-                    row++;
-                }
+            //In Spalte 2 soll der Titel des Mediums eingetragen werden
+            QTableWidgetItem *titleB = new QTableWidgetItem(mediumList[i]->getTitle());
+            table->setItem(row, 1, titleB);
+
+            //In Spalte 3 soll der Autor des Mediums eingetragen werden
+            QTableWidgetItem *author = new QTableWidgetItem(mediumList[i]->getAuthor());
+            table->setItem(row, 2, author);
+
+            //Wenn das Medium schon ausgeliehen ist soll in der 4 Spalte "Ausgliehen" stehen
+            if(mediumList[i]->getBorrower()!=nullptr){
+                QTableWidgetItem *borrowState =new QTableWidgetItem("Ausgeliehen");
+
+                //Textfarbe auf rot ändern
+                QColor redColor(Qt::red);
+                borrowState->setForeground(redColor);
+
+                //Text dick darstellen
+                QFont font;
+                font.setBold(true);
+                borrowState->setFont(font);
+
+                //Einfügen des Items in die 4 Spalte
+                table->setItem(row, 3, borrowState);
+
+                //zum nächstem Medium springen
+                row++;
+                continue;
             }
-        }
-        else{
-            warning->setText("Person nicht gefunden");
+
+            //_____Dieser Code wird nur ausgeführt, wenn Medium nicht ausgeliehen ist______
+
+            //Pointer auf Medium in currM speichern
+            Medium* currM = mediumList[i];
+
+            //Neuen Button mit Text "Ausleihen" erstellen
+            QPushButton *borrowButton = new QPushButton("Ausleihen");
+            
+            //Funktion hinzufügen, die beim click-Event des Buttons aufgerufen wird
+            //Funktion borrow wird aufgerufen
+            //->ändert Sichtbarkeit auf Widget, in welchem Person, welche das Medium ausleihen will eingetragen wird
+            QObject::connect(borrowButton, &QPushButton::clicked, [=](){
+                borrow(currM);
+            });
+
+            //Button in Spalte 4 einfügen
+            table->setCellWidget(row, 3, borrowButton);
+
+            row++;
         }
     });
+}
 
+void MainWindow::InitializeReturnTab(){
+
+//--------------------------------------------------------
+//---Funktionalität zum "searchButtonReturn" hinzufügen---
+//--------------------------------------------------------
+
+    //Pointer auf "addButtonPerson"-Button einrichten
+    QPushButton *searchButtonReturn = this->findChild<QPushButton*>("searchButtonReturn");
+
+    //Funktion hinzufügen, die beim click-Event des Buttons aufgerufen wird
+    //->Es sollen alles ausgliehenen Medien der Person aufgezählt werden
+    QObject::connect(searchButtonReturn, &QPushButton::clicked, [=](){
+
+        //Zugriff auf FromLayout-items
+        QLineEdit* firstname = this->findChild<QLineEdit*>("firstnameLineEditReturn");
+        QLineEdit* lastname = this->findChild<QLineEdit*>("nameLineEditReturn");
+        QLabel* warning = this->findChild<QLabel*>("warningLabelReturn");
+
+        //Person aus der Eingabe suchen
+        int idx = searchPerson(firstname->text(), lastname->text());
+
+        //Wenn diese nicht gefunden wurde warning ausgeben
+        if(idx==-1){
+            warning->setText("Person nicht gefunden");
+            return;
+        }
+
+        //___Dieser Code wird nur ausgeführt wenn Person gefunden wurde___
+
+        //Pointer auf Table-Widget einrichten
+        QTableWidget *table = this->findChild<QTableWidget *>("tableWidgetReturn");
+
+        //Tabelle leeren
+        table->setRowCount(0);
+
+        //Variable zum zählen der hinzugefügten Zeilen
+        int row =0;
+
+        //Schleife die durch mediaList iteriert
+        //->wenn Person Ausleiher des Mediums ist wird dieser ausgegeben
+        for(int i=0; i<mediumList.size(); i++){
+
+            //Überprüfung ob Person Medium ausgeliehen hat
+            if(mediumList[i]->getBorrower() != personList[idx])
+                continue;
+            
+            //___Dieser Code wird nur ausgeführt wenn Person Medium ausgeliehen hat__
+            
+            //neue Zeile einfügen
+            table->insertRow(row);
+
+            //In Spalte 1 soll der Typ des Mediums eingetragen werden
+            QTableWidgetItem *typeI =new QTableWidgetItem(mediumList[i]->getType());
+            table->setItem(row, 0, typeI);
+
+            //In Spalte 2 soll der Titel des Mediums eingetragen werden
+            QTableWidgetItem *titleB = new QTableWidgetItem(mediumList[i]->getTitle());
+            table->setItem(row, 1, titleB);
+
+            //In Spalte 3 soll der Autor des Mediums eingetragen werden
+            QTableWidgetItem *author = new QTableWidgetItem(mediumList[i]->getAuthor());
+            table->setItem(row, 2, author);
+            
+            //Neuen Button mit Text "Rückgabe" erstellen
+            QPushButton *returnButton = new QPushButton("Rückgabe");
+            
+            //Pointer auf Medium in currM speichern
+            Medium* currM = mediumList[i];
+
+            //Funktion hinzufügen, die beim click-Event des Buttons aufgerufen wird
+            //->Rückgabe des Mediums -> borrower auf NULL
+            QObject::connect(returnButton, &QPushButton::clicked, [=](){
+                currM->setBorrower(NULL);
+
+                //Tabelle neu laden
+                LoadMedia();
+
+                //Klick auf searchButton simulieren, dass Tabelle neu geladen wird
+                searchButtonReturn->click();
+            });
+
+            //Einfügen des Buttons in vierte Spalte
+            table->setCellWidget(row, 3, returnButton);
+            row++;
+        }
+    });
+}
+
+void MainWindow::borrow(Medium* medium){
+
+//-------------------------------------------------------------------------
+//---Leeren des Widgets zum Ausleihen und Sichtbarkeit auf dieses ändern---
+//-------------------------------------------------------------------------
+
+    //Auf Formlayout-Items zugreifen
+    QLineEdit * lastName = this->findChild<QLineEdit*>("nameLineEditBorrow");
+    QLineEdit * firstName= this->findChild<QLineEdit*>("firstnameLineEditBorrow");
+    QLabel *warning = this->findChild<QLabel*>("warningLabelBorrow");
+
+    //FormLayout leeren
+    lastName->setText("");
+    firstName->setText("");
+    warning->setText("");
+
+    //Sichtbarkeit auf Borrow-Widget ändern
+    SetAddBorrower(true);
+    SetSearchMedium(false);
+
+//-----------------------------------------------------
+//---Funktionalität zur "buttonBoxBorrow" hinzufügen---
+//-----------------------------------------------------
+
+    //Pointer auf "QDialogButtonBox"-DialogButtonBox einrichten
+    QDialogButtonBox *borrowBox = this->findChild<QDialogButtonBox *>("buttonBoxBorrow");
+
+    //Funktion hinzufügen, die beim accepted-Event der DialogButtonBox aufgerufen wird
+    //->wenn Person gefunden wird soll dem Medium die Person als Ausleiher hinzugefügt werden
+    QObject::connect(borrowBox, &QDialogButtonBox::accepted, [=](){
+
+        //Index der Person finden, wenn dieser -1 ist wurde die Person nicht gefunden
+        int i = searchPerson(firstName->text(), lastName->text());
+
+        //Person wurde nicht gefunden -> warning
+        if(i==-1){
+            warning->setText("Person nicht gefunden");
+            return;
+        }
+
+        //Person wurde gefunden->hinzufügen dieser
+
+        //Ausleiher hinzufügen
+        medium->setBorrower(personList[i]);
+
+        //Neu Laden der Medium-Tabelle
+        LoadMedia();
+
+        //Sichtbarkeit wieder auf Search-Widget ändern
+        SetAddBorrower(false);
+        SetSearchMedium(true);
+
+        //Klick auf Suche simulieren, sodass Tabelle neu geladen wird
+        QPushButton *searchMedium = this->findChild<QPushButton*>("searchButtonBorrow");
+        searchMedium->click();
+
+        //Funktion bei accepted wieder entfernen, sodass beim nächstem Funktion für ein anderes Medium eingefügt werden kann
+        QObject::disconnect(borrowBox, &QDialogButtonBox::accepted, nullptr, nullptr);
+    });
+
+    //Funktion hinzufügen, die beim rejected-Event der DialogButtonBox aufgerufen wird
+    //->Sichtbarkeit auf Search-Widget ändern
+    QObject::connect(borrowBox, &QDialogButtonBox::rejected, [=](){
+
+        //Sichtbarkeit wieder auf Search-Widget ändern
+        SetAddBorrower(false);
+        SetSearchMedium(true);
+
+        //Funktion bei accepted wieder entfernen, sodass beim nächstem Funktion für ein anderes Medium eingefügt werden kann
+        QObject::disconnect(borrowBox, &QDialogButtonBox::accepted, nullptr, nullptr);
+    });
+}
+
+void MainWindow::InitializeUI(){
+    
+//--------------------------------------------
+//---Personenverwaltungs-Tab initialisieren---
+//--------------------------------------------
+
+    InitializePersonTab();
+
+//------------------------------------------
+//---Mediumverwaltungs-Tab initialisieren---
+//------------------------------------------
+
+    InitializeMediaTab();
+    
+//---------------------------------
+//---Ausleihe-Tab initialisieren---
+//---------------------------------
+    
+    InitializeBorrowTab();
+
+//---------------------------------
+//---Rückgabe-Tab initialisieren---
+//---------------------------------
+    
+    InitializeReturnTab();
 
 
     //Sichtbarkeit auf das View-Widget initialisieren
@@ -295,8 +518,6 @@ void MainWindow::InitializeUI(){
     SetAddMedium(false);
     SetAddBorrower(false);
     SetSearchMedium(true);
-    LoadPersonFromFile();
-    LoadMediaFromFile();
     LoadMedia();
     LoadPerson();
 }
@@ -546,6 +767,15 @@ void MainWindow::LoadPerson(){
         QObject::connect(editButton, &QPushButton::clicked, [=](){EditPerson(currP);});
     }
     table->setSortingEnabled(true);
+}
+
+int MainWindow::searchPerson(QString firstname, QString name){
+    for(int i=0; i<personList.size(); i++){
+        if(personList[i]->getFirstname().compare(firstname)==0 &&
+            personList[i]->getName().compare(name)==0)
+            return i;
+    }
+    return -1;
 }
 
 void MainWindow::SetViewPerson(bool visible){

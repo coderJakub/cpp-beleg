@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="personTab">
        <attribute name="title">
@@ -515,6 +515,11 @@
           <column>
            <property name="text">
             <string>Autor</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string/>
            </property>
           </column>
          </widget>

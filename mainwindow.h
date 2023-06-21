@@ -25,6 +25,12 @@ private:
     QList<Person*> personList;
 
     void InitializeUI();
+    void InitializePersonTab();
+    void InitializeMediaTab();
+    void InitializeBorrowTab();
+    void InitializeReturnTab();
+    void borrow(Medium* medium);
+    int searchPerson(QString firstname, QString name);
     void LoadMedia();
     void SaveMedia();
     void SavePerson();
