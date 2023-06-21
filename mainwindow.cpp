@@ -14,7 +14,10 @@
 #include <QFile>
 #include <QTextStream>
 #include <QIODevice>
+#include <QCheckBox>
 #include <QSaveFile>
+#include <QColor>
+#include <QFont>
 #include "medium.h"
 #include "CD.h"
 #include "DVD.h"
@@ -92,15 +95,6 @@ void MainWindow::InitializeUI(){
         SetAddPerson(false);
     });
 
-    //Funktionalität zum back-Button hinzufügen
-    QPushButton *backPerson = this->findChild<QPushButton*>("backButtonPerson");
-    QObject::connect(backPerson, &QPushButton::clicked, [=](){
-
-        //Sichtbarkeit auf das View-Widget ändern
-        SetViewPerson(true);
-        SetAddPerson(false);
-    });
-
     //Sichtbarkeit auf das View-Widget intialsieren
     SetViewPerson(true);
     SetAddPerson(false);
@@ -168,29 +162,25 @@ void MainWindow::InitializeUI(){
         SetAddMedium(false);
     });
 
-    //Funktionalität zum back-Button hinzufügen
-    QPushButton *backMedium = this->findChild<QPushButton*>("backButtonMedium");
-    QObject::connect(backMedium, &QPushButton::clicked, [=](){
-
-        //Sichtbarkeit auf das View-Widget ändern
-        SetViewMedium(true);
-        SetAddMedium(false);
-    });
-
 //Ausleige
     QPushButton *searchMedium = this->findChild<QPushButton*>("searchButtonBorrow");
     QObject::connect(searchMedium, &QPushButton::clicked, [=](){
     QTableWidget *table = this->findChild<QTableWidget *>("tableWidgetBorrow");
     table->setRowCount(0);
     QLineEdit *title = this->findChild<QLineEdit*>("titelLineEditBorrow");
+    QLineEdit *author = this->findChild<QLineEdit*>("authorLineEditBorrow");
     QComboBox *mediumType = this->findChild<QComboBox*>("mediumComboBoxBorrow");
+    QCheckBox *borrowed = this->findChild<QCheckBox*>("checkBoxBorrow");
     QString titleText = title->text();
+    QString authorText = author->text();
     int row=0;
+    bool showBorrowed = borrowed->checkState();
     for (int i = 0; i < mediumList.size(); i++) {
         QString mediumTitle = mediumList[i]->getTitle();
         if (!mediumTitle.startsWith(titleText, Qt::CaseInsensitive)||
+            !mediumTitle.startsWith(authorText, Qt::CaseInsensitive)||
             !(mediumList[i]->getType()==mediumType->currentText())||
-            !(mediumList[i]->getBorrower()==nullptr))
+            !(mediumList[i]->getBorrower()==nullptr || showBorrowed))
             continue;
         table->insertRow(row);
 
@@ -203,10 +193,21 @@ void MainWindow::InitializeUI(){
         QTableWidgetItem *author = new QTableWidgetItem(mediumList[i]->getAuthor());
         table->setItem(row, 2, author);
 
+        Medium* currM = mediumList[i];
+        if(!(mediumList[i]->getBorrower()==nullptr)){
+            QTableWidgetItem *borrowState =new QTableWidgetItem("Ausgeliehen");
+            QColor redColor(Qt::red);
+            borrowState->setForeground(redColor);
+            QFont font;
+            font.setBold(true);
+            borrowState->setFont(font);
+            borrowState->setForeground(redColor);
+            table->setItem(row, 3, borrowState);
+            continue;
+        }
+
         QPushButton *borrowButton = new QPushButton("Ausleihen");
         table->setCellWidget(row, 3, borrowButton);
-
-        Medium* currM = mediumList[i];
         QObject::connect(borrowButton, &QPushButton::clicked, [=](){
             QLineEdit * nameLineEdit = this->findChild<QLineEdit*>("nameLineEditBorrow");
             QLineEdit * firstnameLineEdit = this->findChild<QLineEdit*>("firstnameLineEditBorrow");
@@ -403,8 +404,6 @@ void MainWindow::EditMedium(Medium* currM){
     authorB->setText(currM->getAuthor());
 
     QDialogButtonBox *addMediumButtons = this->findChild<QDialogButtonBox *>("mediumAddButtonBox");
-    QPushButton *backMedium = this->findChild<QPushButton*>("backButtonMedium");
-    QObject::disconnect(backMedium, &QPushButton::clicked, nullptr, nullptr);
     QObject::disconnect(addMediumButtons, &QDialogButtonBox::accepted, nullptr, nullptr);
     QObject::disconnect(addMediumButtons, &QDialogButtonBox::rejected, nullptr, nullptr);
     QObject::connect(addMediumButtons, &QDialogButtonBox::accepted, [=](){
@@ -416,27 +415,16 @@ void MainWindow::EditMedium(Medium* currM){
         currM->setTitle(titleB->text());
         currM->setAuthor(authorB->text());
         typeB->setDisabled(false);
-        QObject::disconnect(backMedium, &QPushButton::clicked, nullptr, nullptr);
         QObject::disconnect(addMediumButtons, &QDialogButtonBox::accepted, nullptr, nullptr);
         QObject::disconnect(addMediumButtons, &QDialogButtonBox::rejected, nullptr, nullptr);
         InitializeUI();
     });
     QObject::connect(addMediumButtons, &QDialogButtonBox::rejected, [=](){
         typeB->setDisabled(false);
-        QObject::disconnect(backMedium, &QPushButton::clicked, nullptr, nullptr);
         QObject::disconnect(addMediumButtons, &QDialogButtonBox::accepted, nullptr, nullptr);
         QObject::disconnect(addMediumButtons, &QDialogButtonBox::rejected, nullptr, nullptr);
         InitializeUI();
     });
-    QObject::connect(backMedium, &QPushButton::clicked, [=](){
-        typeB->setEditable(false);
-        QObject::disconnect(backMedium, &QPushButton::clicked, nullptr, nullptr);
-        QObject::disconnect(addMediumButtons, &QDialogButtonBox::accepted, nullptr, nullptr);
-        QObject::disconnect(addMediumButtons, &QDialogButtonBox::rejected, nullptr, nullptr);
-        InitializeUI();
-    });
-
-
 }
 
 void MainWindow::EditPerson(Person* currP){
@@ -449,8 +437,6 @@ void MainWindow::EditPerson(Person* currP){
     firstnameB->setText(currP->getFirstname());
 
     QDialogButtonBox *addPersonButtons = this->findChild<QDialogButtonBox *>("personAddButtonBox");
-    QPushButton *backPerson = this->findChild<QPushButton*>("backButtonPerson");
-    QObject::disconnect(backPerson, &QPushButton::clicked, nullptr, nullptr);
     QObject::disconnect(addPersonButtons, &QDialogButtonBox::accepted, nullptr, nullptr);
     QObject::disconnect(addPersonButtons, &QDialogButtonBox::rejected, nullptr, nullptr);
     QObject::connect(addPersonButtons, &QDialogButtonBox::accepted, [=](){
@@ -461,25 +447,15 @@ void MainWindow::EditPerson(Person* currP){
         //Überprüfung ob Medium schon vorhanden ->sonst warning!!
         currP->setName(nameB->text());
         currP->setFirstname(firstnameB->text());
-        QObject::disconnect(backPerson, &QPushButton::clicked, nullptr, nullptr);
         QObject::disconnect(addPersonButtons, &QDialogButtonBox::accepted, nullptr, nullptr);
         QObject::disconnect(addPersonButtons, &QDialogButtonBox::rejected, nullptr, nullptr);
         InitializeUI();
     });
     QObject::connect(addPersonButtons, &QDialogButtonBox::rejected, [=](){
-        QObject::disconnect(backPerson, &QPushButton::clicked, nullptr, nullptr);
         QObject::disconnect(addPersonButtons, &QDialogButtonBox::accepted, nullptr, nullptr);
         QObject::disconnect(addPersonButtons, &QDialogButtonBox::rejected, nullptr, nullptr);
         InitializeUI();
     });
-    QObject::connect(backPerson, &QPushButton::clicked, [=](){
-        QObject::disconnect(backPerson, &QPushButton::clicked, nullptr, nullptr);
-        QObject::disconnect(addPersonButtons, &QDialogButtonBox::accepted, nullptr, nullptr);
-        QObject::disconnect(addPersonButtons, &QDialogButtonBox::rejected, nullptr, nullptr);
-        InitializeUI();
-    });
-
-
 }
 
 void MainWindow::LoadMedia(){
