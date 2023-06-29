@@ -24,21 +24,30 @@ private:
     QList<Medium*> mediumList;
     QList<Person*> personList;
 
+    //Initialiserungsfunktionen
     void InitializeUI();
     void InitializePersonTab();
     void InitializeMediaTab();
     void InitializeBorrowTab();
     void InitializeReturnTab();
-    void borrow(Medium* medium);
-    int searchPerson(QString firstname, QString name);
+
+    //Laden von Medien/Personen in die Tabellen
     void LoadMedia();
+    void LoadPerson();
+
+    //Dateiarbeit
     void SaveMedia();
     void SavePerson();
     void LoadMediaFromFile();
-    void LoadPerson();
     void LoadPersonFromFile();
+
     void EditMedium(Medium* currM);
     void EditPerson(Person* currP);
+    
+    void borrow(Medium* medium);
+    int searchPerson(QString firstname, QString name);
+
+    //Funktionen zur Umstellung der Sichtbarkeit
     void SetAddPerson(bool visible);
     void SetViewPerson(bool visible);
     void SetAddMedium(bool visible);

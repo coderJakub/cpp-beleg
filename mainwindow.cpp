@@ -103,6 +103,13 @@ void MainWindow::InitializePersonTab(){
             return;
         }
 
+        //Überprüfung wenn ob die Eingabe ein Komma enthält
+        //->sonst würde Fehler bei Dateiarbeit entstehen
+        if(firstName->text().contains(',') || lastName->text().contains(',')){
+            warning->setText("Es darf bei der Eingabe kein , benutzt werden");
+            return;
+        }   
+
         //Person zur Liste hinzufügen
         personList.append(new Person(firstName->text(), lastName->text()));
 
@@ -122,6 +129,7 @@ void MainWindow::InitializePersonTab(){
         SetViewPerson(true);
         SetAddPerson(false);
     });
+    LoadPerson();
 }
 
 void MainWindow::InitializeMediaTab(){
@@ -186,6 +194,13 @@ void MainWindow::InitializeMediaTab(){
             return;
         }
 
+        //Überprüfung wenn ob die Eingabe ein Komma enthält
+        //->sonst würde Fehler bei Dateiarbeit entstehen
+        if(title->text().contains(',') || author->text().contains(',')){
+            warning->setText("Es darf bei der Eingabe kein , benutzt werden");
+            return;
+        }   
+
         //Erstellung des Objekts von geforderter Klasse
         Medium* temp=NULL;
         if(medium->currentText()=="Buch")temp = new Book(title->text(), author->text());
@@ -215,6 +230,7 @@ void MainWindow::InitializeMediaTab(){
         SetViewMedium(true);
         SetAddMedium(false);
     });
+    LoadMedia();
 }
 
 void MainWindow::InitializeBorrowTab(){
@@ -518,25 +534,28 @@ void MainWindow::InitializeUI(){
     SetAddMedium(false);
     SetAddBorrower(false);
     SetSearchMedium(true);
-    LoadMedia();
-    LoadPerson();
 }
 
 void MainWindow::LoadMediaFromFile(){
     QFile file("Media.txt");
-    //QFile::remove("Media.txt");
+
+    //Wenn die Datei nicht existiert wird eine neue erstellt
     if(!file.exists()){
         QSaveFile *file=new QSaveFile("Media.txt");
         file->open(QIODevice::WriteOnly | QIODevice::Text);
         file->commit();
         delete file;
     }
+
+    //Lesen der Datei
     if(file.open(QIODevice::ReadOnly | QIODevice::Text)){
         QTextStream in(&file);
         while(!in.atEnd())
             mediumList.append(Medium::parse(in.readLine(),&personList));
         file.close();
     }
+
+    //Bei Fehler Programmbeendung
     else{
         cerr << "Fehler beim öffnen von Media.txt" <<endl;
         exit(-1);
@@ -545,19 +564,24 @@ void MainWindow::LoadMediaFromFile(){
 
 void MainWindow::LoadPersonFromFile(){
     QFile file("Person.txt");
-    //QFile::remove("Person.txt");
+
+    //Wenn die Datei nicht existiert wird eine neue erstellt
     if(!file.exists()){
         QSaveFile *file=new QSaveFile("Person.txt");
         file->open(QIODevice::WriteOnly | QIODevice::Text);
         file->commit();
         delete file;
     }
+    
+    //Lesen der Datei
     if(file.open(QIODevice::ReadOnly | QIODevice::Text)){
         QTextStream in(&file);
         while(!in.atEnd())
             personList.append(Person::parse(in.readLine()));
         file.close();
     }
+    
+    //Bei Fehler Programmbeendung
     else{
         cerr << "Fehler beim öffnen von Media.txt" <<endl;
                 exit(-1);
@@ -566,10 +590,15 @@ void MainWindow::LoadPersonFromFile(){
 
 void MainWindow::SaveMedia(){
     QFile file("Media.txt");
+
+    //Laden von personList in die Datei
     if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream out(&file);
         for (Medium* medium : mediumList) {
             out << medium->print();
+
+            //Einfügen des Index der Person in personList
+            //->beim Laden wieder personList in gleicher Reihenfolge -> Indizes stimmen überein 
             if(medium->getBorrower()!=NULL){
                 out << "," << personList.indexOf(medium->getBorrower()) << "\n";
             }
@@ -607,72 +636,109 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::EditMedium(Medium* currM){
+
+    //Wechsele Sicht auf Add-Widget
     SetViewMedium(false);
     SetAddMedium(true);
-    QString type;
-    switch(currM->print().split(",")[0].toInt()){
-    case 1: type="Buch"; break;
-    case 2: type="CD";break;
-    case 3: type="DVD";break;
-    }
+
+    //Pointer auf Widgetelemente und diese befüllen
     QComboBox* typeB = this->findChild<QComboBox *>("mediumComboBoxMedium");
     QLineEdit* titleB =this->findChild<QLineEdit *>("titleLineEditMedium");
     QLineEdit* authorB=this->findChild<QLineEdit *>("authorLineEditMedium");
     QLabel *warning = this->findChild<QLabel*>("warningMedium");
-    typeB->setCurrentText(type);
-    typeB->setDisabled(true);
+    typeB->setCurrentText( currM->getType());
+    typeB->setDisabled(true); //Wechseln des Mediums nicht erlauben
     titleB->setText(currM->getTitle());
     authorB->setText(currM->getAuthor());
 
+    //neue Funktion zu den Buttons hinzufügen
     QDialogButtonBox *addMediumButtons = this->findChild<QDialogButtonBox *>("mediumAddButtonBox");
     QObject::disconnect(addMediumButtons, &QDialogButtonBox::accepted, nullptr, nullptr);
     QObject::disconnect(addMediumButtons, &QDialogButtonBox::rejected, nullptr, nullptr);
     QObject::connect(addMediumButtons, &QDialogButtonBox::accepted, [=](){
+        //Überprüfung ob Titel-Feld auch mit Text befüllt ist
         if(titleB->text().trimmed().isEmpty()){
             warning->setText("Titel muss befüllt sein");
-                return;
+            return;
         }
-        //Überprüfung ob Medium schon vorhanden ->sonst warning!!
+
+        //Überprüfung wenn ob die Eingabe ein Komma enthält
+        //->sonst würde Fehler bei Dateiarbeit entstehen
+        if(titleB->text().contains(',') || authorB->text().contains(',')){
+            warning->setText("Es darf bei der Eingabe kein , benutzt werden");
+            return;
+        }
+
+        //Medium ändern
         currM->setTitle(titleB->text());
         currM->setAuthor(authorB->text());
+
+        //Ursprünglichen Stand wiederherstellen
         typeB->setDisabled(false);
         QObject::disconnect(addMediumButtons, &QDialogButtonBox::accepted, nullptr, nullptr);
         QObject::disconnect(addMediumButtons, &QDialogButtonBox::rejected, nullptr, nullptr);
-        InitializeUI();
+        InitializeMediaTab();
     });
     QObject::connect(addMediumButtons, &QDialogButtonBox::rejected, [=](){
+        
+        //Ursprünglichen Stand wiederherstellen
         typeB->setDisabled(false);
         QObject::disconnect(addMediumButtons, &QDialogButtonBox::accepted, nullptr, nullptr);
         QObject::disconnect(addMediumButtons, &QDialogButtonBox::rejected, nullptr, nullptr);
-        InitializeUI();
+        InitializeMediaTab();
     });
 }
 
 void MainWindow::EditPerson(Person* currP){
+
+    //Sichtbarkeit auf Add-Medium ändern
     SetViewPerson(false);
     SetAddPerson(true);
+
+    //Pointer auf Widgetelemente anlegen und diese befüllen
     QLineEdit* nameB =this->findChild<QLineEdit *>("nameLineEdit");
     QLineEdit* firstnameB=this->findChild<QLineEdit *>("firstnameLineEdit");
     QLabel *warning = this->findChild<QLabel*>("warningPerson");
     nameB->setText(currP->getName());
     firstnameB->setText(currP->getFirstname());
-
+    
+    //neue Funktion zu den Buttons hinzufügen
     QDialogButtonBox *addPersonButtons = this->findChild<QDialogButtonBox *>("personAddButtonBox");
     QObject::disconnect(addPersonButtons, &QDialogButtonBox::accepted, nullptr, nullptr);
     QObject::disconnect(addPersonButtons, &QDialogButtonBox::rejected, nullptr, nullptr);
     QObject::connect(addPersonButtons, &QDialogButtonBox::accepted, [=](){
+        //Überprüfung ob Felder auch mit Text befüllt sind
         if((firstnameB->text().trimmed()).isEmpty() || (nameB->text().trimmed()).isEmpty()){
-            warning->setText("Die Texte Name und Vorname müssen befüllt sein");
-                return;
+            warning->setText("Die Texte Name und Vorname müssen befüllt sein!");
+            return;
         }
-        //Überprüfung ob Medium schon vorhanden ->sonst warning!!
+        
+        //Überprüfung ob Person schon existiert
+        //->searchPerson erzeugt Rückgabewert -1, wenn sich noch keine Person mit gleichem Vor- und Nachnamen im System befindet
+        if(searchPerson(firstnameB->text(), nameB->text())!=-1){
+            warning->setText(firstnameB->text()+" "+nameB->text()+" ist schon im System eingefügt wurden!");
+            return;
+        }
+
+        //Überprüfung wenn ob die Eingabe ein Komma enthält
+        //->sonst würde Fehler bei Dateiarbeit entstehen
+        if(firstnameB->text().contains(',') || nameB->text().contains(',')){
+            warning->setText("Es darf bei der Eingabe kein , benutzt werden");
+            return;
+        }   
+
+        //Ändern der Person
         currP->setName(nameB->text());
         currP->setFirstname(firstnameB->text());
+
+        //Ursprünglichen Stand wiederherstellen
         QObject::disconnect(addPersonButtons, &QDialogButtonBox::accepted, nullptr, nullptr);
         QObject::disconnect(addPersonButtons, &QDialogButtonBox::rejected, nullptr, nullptr);
         InitializeUI();
     });
     QObject::connect(addPersonButtons, &QDialogButtonBox::rejected, [=](){
+
+        //Ursprünglichen Stand wiederherstellen
         QObject::disconnect(addPersonButtons, &QDialogButtonBox::accepted, nullptr, nullptr);
         QObject::disconnect(addPersonButtons, &QDialogButtonBox::rejected, nullptr, nullptr);
         InitializeUI();
@@ -680,20 +746,18 @@ void MainWindow::EditPerson(Person* currP){
 }
 
 void MainWindow::LoadMedia(){
+
+    //Pointer auf Mediatab herstellen
     QTableWidget *table = this->findChild<QTableWidget *>("tableWidgetMedium");
     table->setSortingEnabled(false);
-    table->setRowCount(0);
+    table->setRowCount(0); //Tabelle leeren
+
+    //Jedes Medium in der Liste in Tabelle hinzufügen
     for(int row=0; row<mediumList.size(); ++row){
         table->insertRow(row);
-        QString type;
-        switch(mediumList[row]->print().split(",")[0].toInt()){
-        case 1: type="Buch"; break;
-        case 2: type="CD";break;
-        case 3: type="DVD";break;
-        }
 
-        QTableWidgetItem *typeI =new QTableWidgetItem(type);
-        table->setItem(row, 0, typeI);
+        QTableWidgetItem *type =new QTableWidgetItem(mediumList[row]->getType());
+        table->setItem(row, 0, type);
 
         QTableWidgetItem *title = new QTableWidgetItem(mediumList[row]->getTitle());
         table->setItem(row, 1, title);
@@ -701,6 +765,7 @@ void MainWindow::LoadMedia(){
         QTableWidgetItem *author = new QTableWidgetItem(mediumList[row]->getAuthor());
         table->setItem(row, 2, author);
 
+        //Wenn ein Ausleiher exsitiert diesen einfügen
         QTableWidgetItem *borrower=NULL;
         if(mediumList[row]->getBorrower()==NULL)
             borrower=new QTableWidgetItem("");
@@ -708,6 +773,7 @@ void MainWindow::LoadMedia(){
             borrower=new QTableWidgetItem(mediumList[row]->getBorrower()->getFirstname()+" "+mediumList[row]->getBorrower()->getName());
         table->setItem(row, 3, borrower);
 
+        //Deletebutton hinzufügen
         QPushButton *deleteButton = new QPushButton("Löschen");
         table->setCellWidget(row, 4, deleteButton);
 
@@ -718,6 +784,7 @@ void MainWindow::LoadMedia(){
             mediumList.removeAll(currM);
         });
 
+        //Editbutton hinzufügen
         QPushButton *editButton = new QPushButton("Ändern");
         table->setCellWidget(row, 5, editButton);
         QObject::connect(editButton, &QPushButton::clicked, [=](){EditMedium(currM);});
@@ -726,9 +793,13 @@ void MainWindow::LoadMedia(){
 }
 
 void MainWindow::LoadPerson(){
+    //Pointer auf Tablewidget
     QTableWidget *table = this->findChild<QTableWidget *>("tableWidgetPerson");
-    table->setRowCount(0);
+
+    table->setRowCount(0); //Tabelle leeren
     table->setSortingEnabled(false);
+
+    //Jede Person in Tabelle einfügen
     for(int row=0; row<personList.size(); ++row){
         table->insertRow(row);
 
@@ -741,6 +812,7 @@ void MainWindow::LoadPerson(){
         QPushButton *listButton = new QPushButton("Auflisten");
         table->setCellWidget(row, 2, listButton);
 
+        //Button hinzufügen der ausgeliehene Medien der Person anzeigt
         Person* currP = personList[row];
         QObject::connect(listButton, &QPushButton::clicked, [=](){
             QTabWidget *tabWidget = this->findChild<QTabWidget*>("tabWidget");
@@ -753,6 +825,7 @@ void MainWindow::LoadPerson(){
             searchButton->click();
         });
 
+        //Deletebutton hinzufügen
         QPushButton *deleteButton = new QPushButton("Löschen");
         table->setCellWidget(row, 3, deleteButton);
 
@@ -762,6 +835,7 @@ void MainWindow::LoadPerson(){
             personList.removeAll(currP);
         });
 
+        //EditButton hinzufügen
         QPushButton *editButton = new QPushButton("Ändern");
         table->setCellWidget(row, 4, editButton);
         QObject::connect(editButton, &QPushButton::clicked, [=](){EditPerson(currP);});
@@ -773,9 +847,9 @@ int MainWindow::searchPerson(QString firstname, QString name){
     for(int i=0; i<personList.size(); i++){
         if(personList[i]->getFirstname().compare(firstname)==0 &&
             personList[i]->getName().compare(name)==0)
-            return i;
+            return i; //Rückgabe des Index der Person
     }
-    return -1;
+    return -1; //Wenn Person nicht existiert dann Rückgabe -1
 }
 
 void MainWindow::SetViewPerson(bool visible){
