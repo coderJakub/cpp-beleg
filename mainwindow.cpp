@@ -537,11 +537,11 @@ void MainWindow::InitializeUI(){
 }
 
 void MainWindow::LoadMediaFromFile(){
-    QFile file("Media.txt");
+    QFile file(QApplication::applicationDirPath() + "/Media.txt");
 
     //Wenn die Datei nicht existiert wird eine neue erstellt
     if(!file.exists()){
-        QSaveFile *file=new QSaveFile("Media.txt");
+        QSaveFile *file=new QSaveFile(QApplication::applicationDirPath() + "/Media.txt");
         file->open(QIODevice::WriteOnly | QIODevice::Text);
         file->commit();
         delete file;
@@ -563,11 +563,11 @@ void MainWindow::LoadMediaFromFile(){
 }
 
 void MainWindow::LoadPersonFromFile(){
-    QFile file("Person.txt");
+    QFile file(QApplication::applicationDirPath() + "/Person.txt");
 
     //Wenn die Datei nicht existiert wird eine neue erstellt
     if(!file.exists()){
-        QSaveFile *file=new QSaveFile("Person.txt");
+        QSaveFile *file=new QSaveFile(QApplication::applicationDirPath() + "/Person.txt");
         file->open(QIODevice::WriteOnly | QIODevice::Text);
         file->commit();
         delete file;
@@ -589,7 +589,7 @@ void MainWindow::LoadPersonFromFile(){
 }
 
 void MainWindow::SaveMedia(){
-    QFile file("Media.txt");
+    QFile file(QApplication::applicationDirPath() + "/Media.txt");
 
     //Laden von personList in die Datei
     if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -615,7 +615,7 @@ void MainWindow::SaveMedia(){
 }
 
 void MainWindow::SavePerson(){
-    QFile file("Person.txt");
+    QFile file(QApplication::applicationDirPath() + "/Person.txt");
     if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream out(&file);
         for (Person* person : personList)
