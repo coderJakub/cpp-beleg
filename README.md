@@ -1,13 +1,13 @@
 # cpp-beleg
-CMake configurations://
-cmake -B ./build -DCMAKE_BUILD_TYPE=Release
+CMake configurations: <br/>
+cmake -B ./build -DCMAKE_BUILD_TYPE=Release <br/> <br/>
 
-Build command:
-cmake --build ./build --config Release
+Build command: <br/>
+cmake --build ./build --config Release<br/> <br/>
 
-Copy example data into build directory:
-cp ./exampleData/Media.txt ./build/Media.txt
-cp ./exampleData/People.txt ./build/People.txt
+Copy example data into build directory: <br/>
+cp ./exampleData/Media.txt ./build/Media.txt <br/>
+cp ./exampleData/People.txt ./build/People.txt<br/> <br/>
 
-Run program:
+Run program: <br/>
 ./build/beleg
