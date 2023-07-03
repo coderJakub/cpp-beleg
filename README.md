@@ -1,5 +1,5 @@
 # cpp-beleg
-CMake configurations:
+CMake configurations://
 cmake -B ./build -DCMAKE_BUILD_TYPE=Release
 
 Build command:
