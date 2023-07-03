@@ -1,4 +1,3 @@
-# cpp-beleg
 <h2>CMake configurations:</h2>
 cmake -B ./build -DCMAKE_BUILD_TYPE=Release <br/> <br/>
 
